@@ -1,12 +1,25 @@
 import player
 import time
 import threading
-from node import *
+import random
 from agent import MultiAgent
 
 # 更新后的用法，大体相同，在player初始化的时候，加入游戏类别参数即可
 agent = MultiAgent(smooth=True, num_players=2)
+agent0 = MultiAgent(smooth=True, num_players=2)
+agent1 = MultiAgent(smooth=False, num_players=2)
 my_event = threading.Event()
+
+
+def random_policy(action_list):
+    new_stage = action_list.rfind("/") + 1
+    available_actions = ["f", "c", "r"]
+    raise_cnt = action_list[new_stage:].count("r")
+    if raise_cnt < 1:
+        available_actions.remove("f")
+    if raise_cnt >= 2:
+        available_actions.remove("r")
+    return random.choice(available_actions)
 
 
 def train(player):
@@ -23,7 +36,7 @@ def train(player):
             break
 
         while True:
-            print(obser)
+            # print(obser)
             action = agent.learn(obser)
 
             obser_, reward, done = player.step(action)
@@ -33,7 +46,7 @@ def train(player):
                 break
 
         agent.learn(obser)
-        flag = agent.ready_to_reset(int(obser[1]), reward, True)
+        flag = agent.ready_to_reset(obser, reward, True)
         if flag:
             my_event.set()
         my_event.wait(timeout=10)
@@ -55,7 +68,8 @@ def player_one_round(player):
             break
 
         while True:
-            action = agent.take_action(obser)
+            # action = random_policy(obser[3])
+            action = agent0.take_action(obser)
             obser_, reward, done = player.step(action)
             obser = obser_
 
@@ -64,7 +78,7 @@ def player_one_round(player):
                 episode += 1
                 break
 
-        flag = agent.ready_to_reset(int(obser[1]), reward, False)
+        flag = agent.ready_to_reset(obser, reward, False)
         if flag:
             my_event.set()
         my_event.wait(timeout=10)
@@ -87,7 +101,8 @@ def player_two_round(player):
             break
 
         while True:
-            action = random.choice(["f", "c", "r"])
+            action = random_policy(obser[3])
+            # action = agent1.take_action(obser)
             obser_, reward, done = player.step(action)
 
             obser = obser_
@@ -97,7 +112,7 @@ def player_two_round(player):
                 episode += 1
                 break
 
-        flag = agent.ready_to_reset(int(obser[1]), reward, False)
+        flag = agent.ready_to_reset(obser, reward, False)
         if flag:
             my_event.set()
         my_event.wait(timeout=10)
