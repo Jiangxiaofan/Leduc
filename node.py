@@ -14,18 +14,26 @@ class TreeNode(object):
         self.children = dict()
         self.wins = 0
         self.visits = 0
+        self.score = None
+        self.mean_score = None
         return
 
-    def best_child(self):
-        s = sum(child.visits for child in self.children.values())
+    def average_visit_policy(self):
         prob = 0
         z = random.random()
+        s = sum(child.visits for child in self.children.values())
         for child in self.children.values():
             prob += float(child.visits)/s
             if z < prob:
                 return child
         return self.children.values()[-1]
-        # return sorted(self.children.values(), key=lambda x: float(x.wins)/x.visits)[-1]
+
+    def highest_value_policy(self):
+        return sorted(self.children.values(), key=lambda x: float(x.wins)/x.visits)[-1]
+
+    def best_child(self):
+        return self.average_visit_policy()
+        # return self.highest_value_policy()
 
     def uct_child(self):
         total = sum([child.visits for child in self.children.values()])
@@ -44,13 +52,7 @@ class TreeNode(object):
                 key=lambda x: float(x.wins)/x.visits + 18*sqrt(log(self.visits)/x.visits)
             )[-1]
         else:
-            prob = 0
-            n = random.random()
-            for child in self.children.values():
-                prob += float(child.visits)/total
-                if n < prob:
-                    return child
-            return self.children.values()[-1]
+            return self.average_visit_policy()
 
     def update(self, r):
         self.visits += 1
@@ -68,4 +70,5 @@ class ChanceNode(TreeNode):
     def __init__(self, action=None, parent=None):
         self.actions = list()
         self.player = None
+        self.deck = None
         super(ChanceNode, self).__init__(action, parent)
