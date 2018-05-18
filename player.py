@@ -15,7 +15,7 @@ class Player(object):
     ACTION_LIST = ['f', 'c', 'r']
     BUFFERSIZE = 1024
 
-    def __init__(self, player_idx, player_name, port, game_path, ip='localhost'):
+    def __init__(self, player_idx, port, game_path, ip='localhost'):
         """
         初始化玩家类，在这里Player主要还是完成链接dealer 和 发送动作，接受信息的工作
         :param playerName: 玩家的名字，Example:'Alice'
@@ -23,7 +23,6 @@ class Player(object):
         :param logPath: 由Dealer写的Log的文档，后期会删除
         :param ip: IP地址，默认值为’localhost‘
         """
-        self.playerName = player_name
         self.player_idx = player_idx
         self.currentMsg = ''
         self.resetable = True
@@ -52,7 +51,7 @@ class Player(object):
         :return: 在可reset的时候返回状态，回报，结束flag，不可reset时调用会返回三个None
         """
         if self.resetable == False:
-            print(self.playerName, "wrong timing to reset")
+            print("wrong timing to reset")
             return None, None, None
         else:
             self.resetable = False
@@ -81,7 +80,7 @@ class Player(object):
                     continue
                 self.msgQueue.put("MATCHSTATE" + msg)
 
-        print(self.playerName, "Ready to exit")
+        print("Ready to exit")
         self.exit = True
         self.resetable = False
         self.socket.close()
